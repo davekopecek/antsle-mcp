@@ -1,0 +1,51 @@
+{
+  "name": "antsle-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for managing an antsle (antMan / edgeLinux) through the antMan REST API",
+  "license": "GPL-3.0-or-later",
+  "author": "Dave Kopecek",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davekopecek/antsle-mcp.git"
+  },
+  "homepage": "https://github.com/davekopecek/antsle-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/davekopecek/antsle-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "antsle",
+    "antman",
+    "edgelinux",
+    "homelab"
+  ],
+  "type": "module",
+  "bin": {
+    "antsle-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepare": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "fetch-spec": "node scripts/fetch-spec.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "dotenv": "^18.0.7",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "typescript": "^5.9.0"
+  }
+}

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+*.log
+
+# Local copy of the antMan API spec (npm run fetch-spec)
+spec/
