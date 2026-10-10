@@ -24,7 +24,7 @@ interface ToolSpec<S extends z.ZodRawShape> {
 }
 
 function render(data: unknown): string {
-  if (data === null || data === undefined) return "OK";
+  if (data === null || data === undefined) return "OK (empty response)";
   return typeof data === "string" ? data : JSON.stringify(data, null, 2);
 }
 
@@ -32,6 +32,10 @@ function errorResult(err: unknown): CallToolResult {
   let text: string;
   if (err instanceof AntmanError) {
     text = `${err.message}\n${render(err.body)}`;
+    // antMan's Clojure backend reports a missing antlet, snapshot, etc. as a 500 with this error.
+    if (JSON.stringify(err.body ?? "").includes("(not (map? nil))")) {
+      text += "\nantMan returns this error when the named item does not exist. Check the name with a list tool.";
+    }
   } else if (err instanceof Error) {
     text = err.name === "TimeoutError" ? `Request timed out: ${err.message}` : err.message;
     // fetch() reports network failures as "fetch failed" with the real reason (ECONNREFUSED, DNS, TLS) in cause.

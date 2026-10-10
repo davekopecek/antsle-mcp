@@ -82,7 +82,8 @@ export function registerAntletTools(ctx: ToolContext): void {
           .optional()
           .describe("Antlet number; determines the private IP (e.g. 33 -> 10.1.1.33)"),
         zpoolName: z.string().optional().describe("ZFS pool to create the antlet in, e.g. 'antlets'"),
-        compression: z.string().optional().describe("ZFS compression, e.g. 'lz4' or 'off'"),
+        // antMan rejects creates without compression, although the spec does not mark it required.
+        compression: z.string().default("off").describe("ZFS compression: 'off' (antMan's default) or 'lz4'"),
       },
     },
     ({ name, template, ram, cpu, antletNum, zpoolName, compression }) =>
@@ -91,9 +92,9 @@ export function registerAntletTools(ctx: ToolContext): void {
         template,
         ram,
         cpu,
+        compression,
         ...(antletNum !== undefined && { "antlet-num": antletNum }),
         ...(zpoolName !== undefined && { "zpool-name": zpoolName }),
-        ...(compression !== undefined && { compression }),
       }),
   );
 
@@ -140,7 +141,7 @@ export function registerAntletTools(ctx: ToolContext): void {
         name: z.string().min(1).describe("Name (dname) for the new antlet"),
         antletNum: z.number().int().positive().describe("Antlet number for the new antlet; determines its private IP"),
         zpoolName: z.string().default("antlets").describe("ZFS pool for the new antlet"),
-        compression: z.string().default("lz4").describe("ZFS compression for the new antlet"),
+        compression: z.string().default("off").describe("ZFS compression for the new antlet: 'off' or 'lz4'"),
       },
     },
     ({ source, snapshot, name, antletNum, zpoolName, compression }) =>

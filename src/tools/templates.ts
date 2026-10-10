@@ -5,6 +5,8 @@ import { z } from "zod";
 import { seg } from "../client.js";
 import { defineTool, type ToolContext } from "./define.js";
 
+const TEMPLATE_CATALOG_URL = "http://central.antsle.com/api/templates";
+
 export function registerTemplateTools(ctx: ToolContext): void {
   const { client } = ctx;
 
@@ -24,10 +26,31 @@ export function registerTemplateTools(ctx: ToolContext): void {
     "antsle_list_available_templates",
     {
       title: "List available templates",
-      description: "List templates that can be downloaded and installed from antsle's template repository.",
+      description:
+        "List templates that can be downloaded and installed from antsle's template repository. " +
+        "Pass a template's key to antsle_install_template.",
       readOnly: true,
     },
-    () => client.get("/api/templates/available"),
+    async () => {
+      try {
+        return await client.get("/api/templates/available");
+      } catch (err) {
+        // antMan 3.4.x answers this endpoint with HTTP 500 "(not (map? nil))", so read antsle's public
+        // catalog directly. Its keys are the ones /api/templates-install/{template-key} expects.
+        const res = await fetch(TEMPLATE_CATALOG_URL, { signal: AbortSignal.timeout(ctx.config.timeoutMs) });
+        if (!res.ok) throw err;
+        const catalog = (await res.json()) as Array<Record<string, unknown>>;
+        return {
+          source: `${TEMPLATE_CATALOG_URL} (antMan's /api/templates/available failed: ${(err as Error).message})`,
+          templates: catalog.map(({ key, label, description, "template-size-label": size }) => ({
+            key,
+            label,
+            description,
+            size,
+          })),
+        };
+      }
+    },
   );
 
   defineTool(
