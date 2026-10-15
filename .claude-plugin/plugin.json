@@ -1,0 +1,53 @@
+{
+  "name": "antsle-mcp",
+  "displayName": "antsle (unofficial)",
+  "version": "0.1.0",
+  "description": "Unofficial. Manage an antsle (antMan / edgeLinux) from Claude Code: the antsle MCP server plus a skill for using it safely",
+  "author": {
+    "name": "Dave Kopecek",
+    "url": "https://github.com/davekopecek"
+  },
+  "homepage": "https://github.com/davekopecek/antsle-mcp",
+  "repository": "https://github.com/davekopecek/antsle-mcp",
+  "license": "GPL-3.0-or-later",
+  "keywords": ["antsle", "antman", "edgelinux", "homelab", "mcp"],
+  "userConfig": {
+    "antsle_url": {
+      "type": "string",
+      "title": "antsle URL",
+      "description": "https://<your-antsle-host> or http://<name>.local:3000",
+      "required": true
+    },
+    "antsle_username": {
+      "type": "string",
+      "title": "antMan username",
+      "description": "Your antMan login",
+      "required": true
+    },
+    "antsle_password": {
+      "type": "string",
+      "title": "antMan password",
+      "description": "Stored in your system's secure credential store",
+      "required": true,
+      "sensitive": true
+    },
+    "antsle_read_only": {
+      "type": "boolean",
+      "title": "Read-only mode",
+      "description": "Register only read tools (recommended while you try it out)",
+      "default": true
+    }
+  },
+  "mcpServers": {
+    "antsle": {
+      "command": "npx",
+      "args": ["-y", "github:davekopecek/antsle-mcp"],
+      "env": {
+        "ANTSLE_URL": "${user_config.antsle_url}",
+        "ANTSLE_USERNAME": "${user_config.antsle_username}",
+        "ANTSLE_PASSWORD": "${user_config.antsle_password}",
+        "ANTSLE_READ_ONLY": "${user_config.antsle_read_only}"
+      }
+    }
+  }
+}
