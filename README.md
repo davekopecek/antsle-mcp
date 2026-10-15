@@ -46,6 +46,21 @@ claude mcp add antsle --scope user \
 
 Claude Code stores these values in plain text in `~/.claude.json`.
 
+### Option 3: install as a Claude Code plugin
+
+The repo is also a Claude Code plugin marketplace. The plugin bundles the MCP server (run with npx from GitHub) and a skill that teaches Claude how to use it safely. Inside Claude Code:
+
+```
+/plugin marketplace add davekopecek/antsle-mcp
+/plugin install antsle-mcp@antsle-mcp
+```
+
+On Claude Code 2.1.275 or later, one step does both: `/plugin install antsle-mcp --marketplace davekopecek/antsle-mcp`.
+
+When you enable the plugin, Claude Code asks for your antsle URL, username, password and whether to run read-only. Read-only is on by default; turn it off in `/config` when you want the write tools. The password goes to your system's secure credential store, not `settings.json`.
+
+If you already added the server with Option 1 or 2, remove it (`claude mcp remove antsle -s user`) so the tools aren't registered twice.
+
 ### Check it
 
 ```bash
@@ -64,7 +79,15 @@ To try it without write access first, add `ANTSLE_READ_ONLY=true` to `.env`, or 
 cd antsle-mcp && git pull && npm install
 ```
 
-Then restart Claude Code. With Option 2, npx fetches the latest commit when its cache expires. Run `npx clear-npx-cache` to force an update.
+Then restart Claude Code. With Option 2, npx fetches the latest commit when its cache expires. Run `npx clear-npx-cache` to force an update. With Option 3, run `/plugin marketplace update antsle-mcp`; the plugin updates when its version changes.
+
+## Safety guidance for the assistant
+
+The server sends instructions to every MCP client when it connects: read before changing, confirm antlet names and destructive actions with the user, offer a snapshot before risky changes, check dependencies before deleting, prefer stop over force-stop, and leave host-level actions (shutdown, upgrades, network commits) to a human.
+
+The Claude Code plugin adds the `antsle` skill (`skills/antsle/SKILL.md`, invoked as `/antsle-mcp:antsle`, though Claude loads it on its own when you ask about antlets), which expands on those rules with step-by-step workflows for status overviews, cloning, resizing, installing templates and rolling back. To use the skill without the plugin, copy `skills/antsle` into `~/.claude/skills/`.
+
+Read-only mode (`ANTSLE_READ_ONLY=true`) is the hard guarantee: write tools are not registered at all.
 
 ## Other MCP clients
 
@@ -152,7 +175,26 @@ npm run dev        # tsc --watch
 npm run inspect    # MCP Inspector against dist/index.js
 ```
 
-Tools live in `src/tools/`, grouped by area. Each tool is a `defineTool(...)` call that maps its arguments onto an antMan endpoint, so adding one is usually a few lines.
+Tools live in `src/tools/`, grouped by area. Each tool is a `defineTool(...)` call that maps its arguments onto an antMan endpoint, so adding one is usually a few lines. Add a row for it to the endpoint table in `test/tools.test.ts`.
+
+If you change tool behavior or safety rules, update both `src/instructions.ts` (sent to every MCP client) and `skills/antsle/SKILL.md` (Claude Code) so they stay consistent.
+
+### Testing
+
+```bash
+npm run typecheck  # src and tests
+npm test           # Vitest unit and protocol tests
+```
+
+`npm test` needs no antsle and no network. It stubs `fetch` with a small fake antMan and drives the real server through an in-memory MCP client, checking tool registration, read-only mode, annotations, how each tool maps onto antMan endpoints, and error handling. GitHub Actions runs typecheck, build and tests on Node 20 and 22.
+
+To smoke-test against your own antsle (read-only, uses your `.env`):
+
+```bash
+ANTSLE_LIVE_TESTS=true npm run test:live
+```
+
+`claude plugin validate .` checks the plugin manifests and the skill.
 
 ## License
 
