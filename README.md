@@ -8,7 +8,7 @@ With it, an AI assistant like Claude Code can list, create, start, stop, snapsho
 
 ## Requirements
 
-- Node.js 20 or newer
+- Node.js 22 or newer
 - An antsle running antMan, reachable from the machine running the server, either at `https://<your-antsle-host>` (your antsle.us address) or on your LAN at `http://<name>.local:3000`
 - An antMan username and password
 
@@ -186,7 +186,7 @@ npm run typecheck  # src and tests
 npm test           # Vitest unit and protocol tests
 ```
 
-`npm test` needs no antsle and no network. It stubs `fetch` with a small fake antMan and drives the real server through an in-memory MCP client, checking tool registration, read-only mode, annotations, how each tool maps onto antMan endpoints, and error handling. GitHub Actions runs typecheck, build and tests on Node 20 and 22.
+`npm test` needs no antsle and no network. It stubs `fetch` with a small fake antMan and drives the real server through an in-memory MCP client, checking tool registration, read-only mode, annotations, how each tool maps onto antMan endpoints, and error handling. GitHub Actions runs typecheck, build and tests on Node 22 and 24.
 
 To smoke-test against your own antsle (read-only, uses your `.env`):
 
