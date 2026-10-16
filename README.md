@@ -4,7 +4,7 @@ An [MCP](https://modelcontextprotocol.io) server for managing an [antsle](https:
 
 With it, an AI assistant like Claude Code can list, create, start, stop, snapshot and clone antlets, and inspect templates, networking, backups and the host, by talking to antMan the same way the web UI does.
 
-> antsle describes the antMan REST API as experimental, so it may change between antMan releases. This server was built against antMan API 1.0.0.
+> **This is a prerelease.** It has been tested against antMan 3.4.4 and was built against antMan API 1.0.0. antsle describes that API as experimental, so behavior may vary between antMan releases.
 
 ## Requirements
 
@@ -14,7 +14,24 @@ With it, an AI assistant like Claude Code can list, create, start, stop, snapsho
 
 ## Install for Claude Code
 
-### Option 1: clone and use a `.env` file (recommended)
+> **Read-only defaults depend on how you install it.** The Claude Code plugin enables read-only mode by default. Clone and direct `npx` installations are writable unless you set `ANTSLE_READ_ONLY=true`. In read-only mode, write tools are not registered at all.
+
+### Option 1: install as a Claude Code plugin (recommended for Claude Code)
+
+The repo is also a Claude Code plugin marketplace. The plugin bundles the MCP server (run with npx from GitHub) and a skill that teaches Claude how to use it safely. Inside Claude Code:
+
+```
+/plugin marketplace add davekopecek/antsle-mcp
+/plugin install antsle-mcp@antsle-mcp
+```
+
+On Claude Code 2.1.275 or later, one step does both: `/plugin install antsle-mcp --marketplace davekopecek/antsle-mcp`.
+
+When you enable the plugin, Claude Code asks for your antsle URL, username, password and whether to run read-only. Read-only is on by default; turn it off in `/config` when you want the write tools. The password goes to your system's secure credential store, not `settings.json`.
+
+If you already added the server with Option 2 or 3, remove it (`claude mcp remove antsle -s user`) so the tools aren't registered twice.
+
+### Option 2: clone and use a `.env` file (recommended for other MCP clients or local control)
 
 Keeps your credentials in a local `.env` file instead of in your Claude Code config.
 
@@ -32,7 +49,7 @@ claude mcp add antsle --scope user -- node "$(pwd)/dist/index.js"
 
 The server reads `.env` from its own folder, so it works wherever Claude Code launches it.
 
-### Option 2: run straight from GitHub with npx
+### Option 3: run straight from GitHub with npx
 
 No clone. npm installs and builds the package on first run, and you pass the credentials as environment variables:
 
@@ -46,21 +63,6 @@ claude mcp add antsle --scope user \
 
 Claude Code stores these values in plain text in `~/.claude.json`.
 
-### Option 3: install as a Claude Code plugin
-
-The repo is also a Claude Code plugin marketplace. The plugin bundles the MCP server (run with npx from GitHub) and a skill that teaches Claude how to use it safely. Inside Claude Code:
-
-```
-/plugin marketplace add davekopecek/antsle-mcp
-/plugin install antsle-mcp@antsle-mcp
-```
-
-On Claude Code 2.1.275 or later, one step does both: `/plugin install antsle-mcp --marketplace davekopecek/antsle-mcp`.
-
-When you enable the plugin, Claude Code asks for your antsle URL, username, password and whether to run read-only. Read-only is on by default; turn it off in `/config` when you want the write tools. The password goes to your system's secure credential store, not `settings.json`.
-
-If you already added the server with Option 1 or 2, remove it (`claude mcp remove antsle -s user`) so the tools aren't registered twice.
-
 ### Check it
 
 ```bash
@@ -69,7 +71,7 @@ claude mcp list          # antsle should show as connected
 
 Inside Claude Code, run `/mcp` to see the server and its tools, then ask something like "list my antlets".
 
-To try it without write access first, add `ANTSLE_READ_ONLY=true` to `.env`, or pass `-e ANTSLE_READ_ONLY=true`.
+With Option 2 or 3, add `ANTSLE_READ_ONLY=true` to `.env` or pass `-e ANTSLE_READ_ONLY=true` to try it without write access first. The plugin already starts in read-only mode.
 
 `--scope user` makes the server available in all your projects. Use `--scope project` to share it through a project's `.mcp.json`, or leave the flag off to add it to the current project only.
 
@@ -79,7 +81,7 @@ To try it without write access first, add `ANTSLE_READ_ONLY=true` to `.env`, or 
 cd antsle-mcp && git pull && npm install
 ```
 
-Then restart Claude Code. With Option 2, npx fetches the latest commit when its cache expires. Run `npx clear-npx-cache` to force an update. With Option 3, run `/plugin marketplace update antsle-mcp`; the plugin updates when its version changes.
+Then restart Claude Code. With Option 3, npx fetches the latest commit when its cache expires. Run `npx clear-npx-cache` to force an update. With Option 1, run `/plugin marketplace update antsle-mcp`; the plugin updates when its version changes.
 
 ## Safety guidance for the assistant
 
@@ -110,15 +112,15 @@ With a `.env` file in the clone, no `env` block is needed. Otherwise add `"env":
 
 Set these in `.env` (copy `.env.example`) or as environment variables from your MCP client. Variables from the client override `.env`.
 
-| Variable | Required | Description |
-|---|---|---|
-| `ANTSLE_URL` | yes | `https://<your-antsle-host>` or `http://<name>.local:3000` |
-| `ANTSLE_USERNAME` / `ANTSLE_PASSWORD` | yes* | antMan login. The server gets a JWT from `/api/login` and logs in again when it expires. |
-| `ANTSLE_TOKEN` | yes* | Alternative to username and password: a token from `/api/login` |
-| `ANTSLE_READ_ONLY` | no | `true` registers only read tools and limits `antsle_api_request` to GET |
-| `ANTSLE_ENABLE_RAW_API` | no | `true` registers `antsle_api_request` |
-| `ANTSLE_TIMEOUT_MS` | no | Request timeout in ms, default `60000` |
-| `ANTSLE_ENV_FILE` | no | Path to a `.env` file somewhere other than the package folder |
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `ANTSLE_URL` | yes | none | `https://<your-antsle-host>` or `http://<name>.local:3000` |
+| `ANTSLE_USERNAME` / `ANTSLE_PASSWORD` | yes* | none | antMan login. The server gets a JWT from `/api/login` and logs in again when it expires. |
+| `ANTSLE_TOKEN` | yes* | none | Alternative to username and password: a token from `/api/login` |
+| `ANTSLE_READ_ONLY` | no | `false` | `true` registers only read tools and limits `antsle_api_request` to GET. The Claude Code plugin overrides this to `true` by default. |
+| `ANTSLE_ENABLE_RAW_API` | no | `false` | `true` registers `antsle_api_request` |
+| `ANTSLE_TIMEOUT_MS` | no | `60000` | Request timeout in ms |
+| `ANTSLE_ENV_FILE` | no | package `.env` | Path to a `.env` file somewhere other than the package folder |
 
 \* Either username and password, or a token.
 
@@ -156,7 +158,7 @@ Tools that change things are marked with MCP `destructiveHint` / `readOnlyHint` 
 
 ### What's not covered
 
-The antMan API has about 170 operations. Many exist only for the web UI (NPS surveys, billing, demo instances, UI toggles). Others are host-level actions that should stay with a human: shutdown and restart, antMan and edgeLinux upgrades, network config commits, LDAP, and ADS distributed storage. Set `ANTSLE_ENABLE_RAW_API=true` to reach any of them through `antsle_api_request`.
+The antMan API has about 170 operations. Many exist only for the web UI (NPS surveys, billing, demo instances, UI toggles). Host shutdown and restart, antMan and edgeLinux upgrades, network config commits, LDAP, and ADS distributed storage have no dedicated tools and should stay with a human in antMan. The opt-in raw API can technically reach unsupported endpoints in writable mode, but the server's safety instructions tell clients not to use it for these host-level operations. Set `ANTSLE_ENABLE_RAW_API=true` to register `antsle_api_request` for other operations without dedicated tools.
 
 ## antMan API reference
 
